@@ -27,10 +27,14 @@ app.post("/api/notes", function (req, res) {
 
     allNotes.push(newNote);
 
-    const JSONfileraw = fs.readFileSync(dbJson);
-    const JSONfile = JSON.parse(JSONfileraw)
+    if (fs.existsSync(dbJson)) {
+        const JSONfileraw = fs.readFileSync(dbJson);
+        const JSONfile = JSON.parse(JSONfileraw)
 
-    allNotes.push(JSONfile[0]);
+        for (element of JSONfile) {
+            allNotes.push(element);
+        };
+    };
 
     const notes = JSON.stringify(allNotes, null, 2)
 
@@ -44,5 +48,29 @@ app.post("/api/notes", function (req, res) {
         }
     });
 });
+
+app.delete("/api/notes/:id", function (req, res) {
+    const noteId = req.params.id
+
+    const currentNotesRaw = fs.readFileSync(dbJson);
+    const currentNotes = JSON.parse(currentNotesRaw)
+
+    const updatedNotes = currentNotes.filter(function (note) {
+        return note.id !== noteId;
+    });
+
+    const notes = JSON.stringify(updatedNotes, null, 2)
+
+    fs.writeFile(dbJson, notes, "utf8", function (err, data) {
+        if (err) {
+            throw err
+        }
+        else {
+            res.writeHead(200);
+            res.end(data);
+        }
+    });
+
+})
 
 app.listen(PORT, console.log("Server listening on ", PORT));
